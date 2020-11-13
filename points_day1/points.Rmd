@@ -1,0 +1,151 @@
+---
+title: "30_day_maps_1points"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(osmdata)
+library(tidyverse)
+library(ggplot2)
+library(usmap)
+library(sf)
+library(extrafont)
+```
+
+
+```{r}
+man_poly <- getbb("Manhattan, NYC", format_out = "polygon")
+man_rest <- opq("Manhattan, NYC") %>%
+  add_osm_feature(key = 'amenity', value = 'restaurant') %>%
+  osmdata_sf() %>%
+  trim_osmdata(man_poly[1:7])
+```
+
+
+```{r}
+library(ggtext)
+library(hrbrthemes)
+font_add_google("PT Sans Caption", "ptcap")
+showtext_auto()
+map <- ggplot() +
+  geom_sf(data = man_rest$osm_points,
+          alpha = .4,
+          size = .3, 
+          show.legend = "point") +
+  ggthemes::theme_map()
+
+map + annotate("richtext", x = -74.02, y = 40.85, 
+           size = 20, color = "black",
+           label = "Restaurants of",
+           hjust = 0,
+           label.color = NA,
+           family = "ptcap") +
+  annotate("richtext", x = -74.02, y = 40.84, size = 20,
+           color = "black", label = "Manhattan",
+           hjust = 0, family = "ptcap", label.color = NA) +
+  labs(caption="Source:OSM Data", family = "ptcap",
+       size = 15)
+
+ggsave(here::here("R", "30dayMaps", "1-points.png"), dpi = 320, height = 10, width = 5.2)
+```
+
+
+
+
+
+
+SCRAPPPS
+
+
+
+
+
+
+
+NW Jersey
+```{r}
+nj <- getbb("New Jersey", format_out = 'polygon')
+
+tolls <- opq("New Jersey") %>%
+  add_osm_feature(key = "barrier", value = 'toll_booth') %>%
+  osmdata_sf() %>%
+  trim_osmdata(nj)
+
+```
+
+
+```{r}
+library(map)
+nj <- map_data("state", "New Jersey") 
+
+ggplot() +
+  geom_polygon(data = nj, aes(x=long, y = lat, group = group),
+               color = "black",
+               fill = 'white') +
+  geom_sf(data=tolls$osm_points,
+          alpha = .4,
+          color = 'black',
+          fill = "red") +
+  ggthemes::theme_map()
+```
+
+
+```{r}
+ggplot(wrecks$osm_points) +
+  geom_sf()
+```
+
+
+
+New York
+
+```{r}
+ny_bbox <- getbb("NYC")
+ny_poly <- getbb("New York city", format_out = "polygon")
+
+ny_rest <- opq("New York City") %>%
+  add_osm_feature(key = 'amenity', value = 'restaurant') %>%
+  osmdata_sf() %>%
+  trim_osmdata(ny_poly)
+```
+
+
+```{r}
+man_hotel <-
+  opq("Manhattan, NYC") %>%
+  add_osm_feature(key = "tourism", value = "hotel") %>%
+  osmdata_sf() %>%
+  trim_osmdata(man_poly[1:7])
+```
+
+
+
+
+```{r}
+ny_coast <- opq(ny_bbox) %>%
+  add_osm_feature(key = "natural",
+                  value = "coastline") %>%
+  osmdata_sf()
+
+man_coast <- opq("Manhattan") %>%
+  add_osm_feature(key = "natural", value = "coastline") %>%
+  osmdata_sf() %>%
+  trim_osmdata(man_bbox)
+```
+
+
+```{r}
+ny_rest <- ny_rest %>%
+  select(c(name, geometry, cuisine))
+```
+
+```{r}
+ny_rest %>%
+  count(cuisine) %>%
+  arrange()
+```
+
